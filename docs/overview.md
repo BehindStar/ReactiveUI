@@ -1,74 +1,42 @@
 # Overview
 
-ReactiveUI is a compelling combination of MVVM and Reactive Extensions (Rx).
-Combining these two make managing concurrency as well as expressing complicated
-interactions between objects possible in a declarative, functional way. Put
-simply, if you’ve ever had to chain events / callbacks together and declare
-state ints/booleans to keep track of what’s going on, Reactive Extensions
-provides a sane alternative. 
+ReactiveUI 是 MVVM 和 Reactive Extensions (Rx) 的组合。组合这两者使得尽可能的以一种声明的、函数的方式，管理并发和表示对象之间的复杂交互。简单的说，如果你曾经不得不将事件、回调串联起来，以及定义状态整数/布尔值，以跟踪状态变化，那么 Reactive Extensions 是一个理想的选择。
 
-## What’s in this library
+## 库包含的内容
 
-- **ReactiveObject** - a ViewModel object based on Josh Smith’s implementation,
-  that also implements IObservable as a way to notify property changes. It also
-  allows a straightforward way to observe the changes of a single property.
-- **ReactiveCommand** - an implementation of ICommand that is also a Subject
-  whose OnNext is raised when Execute is executed. Its CanExecute can also be
-  deﬁned by an IObservable which means the UI will instantly update instead of
-  implementations which rely on RequerySuggested in WPF. ReactiveCommand
-  encapsulates the common pattern of “Fire asynchronous command, then marshal
-  result back onto dispatcher thread”. It also allows you to control if
-  concurrency is allowed. 
-- **ObservableAsPropertyHelper<T>** - a class that easily lets you convert an
-  IObservable into a property that stores its latest value, as well as ﬁres
-  NotifyPropertyChanged when the property changes. This is really useful for
-  combining existing properties together and replacing IValueConverters, since
-  your ViewModels will also be IObservables.
-- **ReactiveList<T>** - a custom implementation of an ObservableCollection which
-  allows you to see changes in the collection as observables.
-- **MessageBus** - a reactive implementation of the Publish/Subscribe pattern,
-  usefull to decouple your objects, while still being able to communicate.
-- **MemoizingMRUCache** - a cache that only remembers a specified number of
-  recently used items.
-- **ObservableAsyncMRUCache** - a thread-safe, asynchronous MemoizingMRUCache.
-- **ReactiveBinding** - a powerful and flexible cross-platform binding framework
-  as an alternative for Xaml bindings.
+- **ReactiveObject** - 一个 ViewModel 对象，基于 Josh Smith 的实现，其实现了 IObservable 作为一种通知属性变化的方式。
+- 
+- **ReactiveCommand** - 一个 ICommand 的实现，其在 Execute 执行完成后，触发 OnNext （事件）。他的 CanExecute 通过一个 IObservable 定义，这样 UI 就会立即更新，而无需依赖于 WPF 中 RequerySuggested 的实现。ReactiveCommand 封装了基本模式——“执行异步命令，然后返回结果到调度线程”。他还允许你控制是否允许并发。
 
-## Organization
+- **ObservableAsPropertyHelper<T>** - 一个类，让你容易的将一个 IObservable 转换为一个存储其最新值的属性。这对于组合现有属性非常有用，替代 IValueConverters，因为你的 ViewModels 也是 IObservable。
 
-This library is organized into several high-level assemblies:
+- **ReactiveList<T>** - 一个 ObservableCollection 的自定义实现，允许你看见集合中的更改。
+- 
+- **MessageBus** - 一个发布——订阅模式的响应实现，对于解耦对象十分有用，在对象之间仍然保持通讯。
 
-- **ReactiveUI** - Core library that doesn't rely on any particular UI
-  framework. `ReactiveObject`, the base ViewModel object, as well as
-  `ReactiveList<T>`, a more awesome ObservableCollection, `ReactiveCommand`, an
-  implementation of ICommand, and the Binding framework are in here.
+- **MemoizingMRUCache** - 一个缓存，只保留指定数量的最近使用的对象。
 
-- **ReactiveUI.Platforms** - Classes that require references to a Xaml'ly
-  framework, like WPF or WinRT. This assembly also contains the Xaml part of the
-  Binding framework and a screens and navigation framework usefull for
-  navigating back and forward between views based on ViewModels.
+- **ObservableAsyncMRUCache** - 一个线程安全的，异步的 MemoizingMRUCache。
 
-- **ReactiveUI.Blend** - This class has several Blend Behaviors and Triggers
-  that make attaching ViewModel changes to Visual State Manager states.
+- **ReactiveBinding** - 一个强大而灵活的跨平台绑定框架，作为 Xaml 绑定的替代。
 
-- **ReactiveUI.Mobile** - Useful classes when developing for a mobile platforms
-  such as Windows Phone or the Windows Runtime. These classes handle things
-  like persisting state and reacting to application lifetime events.
+## 组织
+
+该库被组织成若干个高级程序集：
+
+- **ReactiveUI** - 不依赖任何特定 UI 框架的核心库。`ReactiveObject`，ViewModel 对象的基类，以及 `ReactiveList<T>`，一个更好用的 ObservableCollection，`ReactiveCommand`，一个 ICommand 的实现。绑定框架也在这里。
+
+- **ReactiveUI.Platforms** - 需要引用一个 Xaml 框架，比如 WPF 或 WinRT。这个程序集包含绑定框架的 Xaml 部分、屏幕、导航框架，在基于 ViewModel 的视图之间导航时非常有用。 
+
+- **ReactiveUI.Blend** - 包含一些 Blend 行为和触发器，用于附加 ViewModel 变化到 Visual State Manager 状态。
+
+- **ReactiveUI.Mobile** - 在为移动平台开发时十分有用，比如 Windows Phone 或 Windows Runtime。这些类处理类似保持状态和响应应用程序生命周期事件等事情。
 
 ## ReactiveObject 
 
-Like any other MVVM framework, ReactiveUI has an object designed as a ViewModel
-class. This object is based on Josh Smith’s ObservableObject implementation in
-MVVM Foundation (actually, many of the classes’ inspiration come from MVVM
-Foundation, Josh does awesome work!). The Reactive version as you can imagine,
-implements INotifyPropertyChanged as well as IObservable so that you can
-subscribe to object property changes.
+和其他 MVVM 框架一样。ReactiveUI 有一个设计为 ViewModel 类的对象。该对象基于 Josh Smith 的 ObservableObject 实现（实际上，许多类的灵感都来自于此）。这个 Reactive 就如你想象的那样， 实现了 INotifyPropertyChanged 和 IObservable，因此你可以订阅对象的属性改变。
 
-ReactiveObject also does a few nice things for you: ﬁrst, when you compile
-ReactiveUI in Debug mode, it will print debug messages using its logging
-framework whenever a property changes. Another example is, implementing the
-standard pattern of a property that raises the changed event is a few lines
-shorter and makes effective use of the new CallerMemberName attribute:
+ReactiveObject 也有一些其他的优秀特性：首先，如果你以 Debug 模式编译 ReactiveUI，他将在属性变化时，使用日志框架输出调试信息。其次，可以以一种十分简单的方式触发属性更改事件（有效利用了新的 CallerMemberName 特性）：
 
 ```cs
 int _someProp; 
@@ -80,10 +48,7 @@ public int SomeProp {
 
 ## ReactiveCommand
 
-ReactiveCommand is an ICommand implementation that is simultaneously a
-RelayCommand implementation, as well as some extra bits that are pretty
-motivating. We can provide an IObservable as our CanExecute. For example, here’s
-a command that can only run when the mouse is up:
+ReactiveCommand 是一个 ICommand 实现，同时也是一个 RelayCommand 实现。可以提供一个 IObservable 对象给 CanExecute。比如，这里有一个命令，只能在鼠标弹起时运行：
 
 ```cs
 var mouseIsUp = Observable.Merge(
@@ -95,10 +60,10 @@ var cmd = new ReactiveCommand(mouseIsUp);
 cmd.Subscribe(x => Console.WriteLine(x));
 ```
 
-Or, how about a command that can only run if two other commands are disabled:
+或者，一个只能在其他两个命令被禁用时运行的命令：
 
 ```cs
-// Pretend these were already initialized to something more interesting 
+// 假设已经初始化了
 var cmd1 = new ReactiveCommand(); 
 var cmd2 = new ReactiveCommand();
 
@@ -107,20 +72,11 @@ var new_cmd = new ReactiveCommand(can_exec);
 new_cmd.Subscribe(Console.WriteLine);
 ```
 
-One thing that’s important to notice here, is that the command’s CanExecute
-updates immediately, instead of relying on CommandManager.RequerySuggested. If
-you’ve ever had the problem in WPF or Silverlight where your buttons don’t
-reenable themselves until you switch focus or click them, you’ve seen this bug.
-Using an IObservable means that the Commanding framework knows exactly when the
-state changes, and doesn’t need to requery every command object on the page.
+需要注意的一件更重要的事情是，命令的 CanExecute 是即时更新的，而不是依赖于 CommandManager.RequerySuggested。如果你曾经在 WPF 或 Silverlight 中遇到 ——直到失去焦点或单击他们之前，按钮不能自动启用——就已经看到过这个BUG了。使用 IObservable 意味着 Commanding 框架准确的知道什么时候状态改变了，而不需要重新查询每个命令对象。
 
-### What about Execute?
+### 关于 Execute
 
-This is where ReactiveCommand’s IObservable implementation comes in.
-ReactiveCommand itself can be observed, and it provides new items whenever
-Execute is called (the items being the parameter passed into the Execute call).
-This means, that Subscribe can act the same as the Execute Action, or we can
-actually get a fair bit more clever. For example:
+这是 ReactiveCommand 的 IObservable 实现带来的。ReactiveCommand 可以被观察，同时他在 Execute 被调用时，传递新对象（作为传递给调用 Execute 的参数）。这意味着，Subscribe 与 Execute 动作的行为是一样的，比如：
 
 ```cs
 var cmd = new ReactiveCommand();
@@ -134,18 +90,9 @@ cmd.Execute(5);
 >>> ”Odd numbers like 5 are even cooler, especially at (the current time)!”
 ```
 
-### Running commands async.
-If you’ve done any C#/Xaml programming that does any sort of interesting work,
-you know that one of the difﬁcult things is that if you do things in an event
-handler that take a lot of time, like reading a large ﬁle or downloading
-something over a network, you will quickly ﬁnd that you have a problem: you
-either block the UI, or when you can’t even do blocking operations at all,
-you’ll just run it on another thread. Then, you ﬁnd the 2nd tricky part that WPF
-and Silverlight objects have thread afﬁnity. Meaning, that you can only access
-objects from the thread that created them. So, at the end of the computation
-when you go to runtextBox.Text = results;, you suddenly get an Exception.
-Dispatcher.BeginInvoke solves this So, once you dig around on the Internet a
-bit, you ﬁnd out the pattern to solve this problem involves the Dispatcher:
+### 异步运行命令
+
+在事件处理器中执行耗时操作时，比如读取大文件、从网络下载东西，会阻塞 UI；或者干脆就不能执行阻塞操作，必须在另一个线程上执行。然后你发现 WPF 和 Silverlight 的线程问题，即，你只能在创建它们的线程上访问它们。因此，在计算的最后执行 runtextBox.Text = results 时，你突然获得一个异常。Dispatcher.BeginInvoke 能够解决这个问题，这样，你发现了使用 Dispatcher 解决这个问题的模式：
 
 ```cs
 void SomeUIEvent(object o, EventArgs e) { 
@@ -159,33 +106,26 @@ void SomeUIEvent(object o, EventArgs e) {
 }
 ```
 
-We use this pattern a lot, so when we run a command, we often are just:
-1. The command executes, we kick off a thread
-2. We calculate something that takes a long time
-3. We take the result, and set a property on the UI thread, using Dispatcher
+我们常常使用这个模式，因此在执行一个命令时，我们会这样：
+1. 命令执行，开启了一个新的线程
+2. 执行一个长时间运算
+3. 获得结果，使用 Dispatcher 在 UI 上设置属性
 
-ReactiveCommand encapsulates this pattern by allowing you to register a Task or
-IObservable to execute. It also gives you other thing for free. For example, you
-often only want one async instance running, and the Command should be disabled
-while we are still processing. Another common thing you would want to do is,
-display some sort of UI while an async action is running - something like a
-spinner control or a progress bar being displayed.
+ReactiveCommand 封装了这个模式，允许你注册一个执行的 Task 或 IObservable。同时还有其他好处。比如，在异步实例执行期间，禁用命令。或者，在执行期间显示执行状态或进度条。
 
-Here’s a simple use of a Command, who will run a task in the background, and
-only allow one at a time (i.e. its CanExecute will return false until the action
-completes)
+这里是一个使用命令的简单例子，其将会在后台执行一个任务，并且同一时间内只能执行一个任务。（比如，它的 CanExecute 将会返回 false，直到动作完成）
 
 ```cs
-var cmd = new ReactiveCommand(null, false, /* do not allow concurrent requests */ null);
+var cmd = new ReactiveCommand(null, false, /* 不允许并发 */ null);
 cmd.RegisterAsyncAction(i => {
-    Thread.Sleep((int)i * 1000); // Pretend to do work
+    Thread.Sleep((int)i * 1000); // 假定执行一项工作
 };
 
-cmd.Execute(5 /*seconds*/); 
-cmd.CanExecute(5); // False! We’re still chewing on the first one.
+cmd.Execute(5 /*秒*/); 
+cmd.CanExecute(5); // False! 正在执行第一个任务。
 ```
 
-## Learn more
+## 了解更多
 
-For more information on how to use ReactiveUI, check out
-[ReactiveUI](http://www.reactiveui.net).
+关于更多如何使用 ReactiveUI 的信息，看看
+[ReactiveUI](http://www.reactiveui.net)。
