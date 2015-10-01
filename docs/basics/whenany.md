@@ -99,6 +99,8 @@ this.Foo.Bar = new Bar() { Baz = "Else" };
 
 ### 更多
 
-* `WhenAny` 在你订阅时，就会给你当前值 —— 这是有效的行为主体（BehaviorSubject）。
+* `WhenAny` 在你订阅时，就会给你当前值 —— 这是一个十足的 BehaviorSubject。
 
 * `WhenAny` 是一个冷 Observable，在最后直接连接到 UI 组件的事件。对于诸如依赖属性这样的事件， 这可能是一个进行优化的（小）地方，通过 `Publish`。
+
+译注：BehaviorSubject 是 Rx 的一个概念，指的是一个订阅其他 Observable 的 Observable，该 Observable 在被订阅时，发送它订阅的 Observable 最近发送的数据（如果没有发送，就发送默认数据）。
