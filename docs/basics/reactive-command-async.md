@@ -1,39 +1,24 @@
-# Asynchronous operations with ReactiveCommand
+# 使用 ReactiveCommand 执行异步操作
 
-One of the most important features of ReactiveCommand is its built-in
-facilities for orchestrating asynchronous operations. In previous versions of
-ReactiveUI, this was in a separate command class, but starting with ReactiveUI
-5.0, this is built-in.
+ReactiveCommand 的一个最重要的功能是其内置的异步操作设施。以前的版本中，它是一个独立的命令类，但是从 5.0 开始，它是内置的了。
 
-### Commands and CreateAsyncXYZ
+### Commands 和 CreateAsyncXYZ
 
-To use ReactiveCommand with async operations, create your Command via the
-`CreateAsync` family of methods
+要使用 ReactiveCommand 执行异步操作，通过 `CreateAsync` 方法家族创建命令
 
-* **Create** - Create a standard ReactiveCommand
-* **CreateAsyncObservable** - Creates a command whose a async method returns
-  `IObservable<T>`
-* **CreateAsyncTask** - Create a command whose async method returns `Task` or
-  `Task<T>`; use this method if you want to write a method with `async/await`.
+* **Create** - 创建标准 ReactiveCommand
+* **CreateAsyncObservable** - 创建一个命令，它的异步方法返回 `IObservable<T>`
+* **CreateAsyncTask** - 创建一个命令，它的异步方法返回 `Task` 或 `Task<T>`；在想使用 `async/await` 编写方法时使用这个方法。
 
-All of these methods will parameterize the resulting ReactiveCommand to be the
-return result of the method (i.e. if your async method returns `Task<String>`,
-your Command will be `ReactiveCommand<String>`). This means, that Subscribing
-to the Command itself returns the results of the async method as an
-Observable.
+所有的这些方法将方法的结果作为产生的 ReactiveCommand 的参数化类型（比如，如果你的异步方法返回 `Task<String>`，那么命令将会是 `ReactiveCommand<String>`）。这意味着，订阅该命令自身返回异步方法的结果作为一个 Observable。
 
-ReactiveCommand itself guarantees that its results will *always* be delivered
-on the UI thread, so extra `ObserveOn`s are unnecessary.
+ReactiveCommand 自己保证他的结果**总是**在 UI 线程上传输，因此不需要额外的 `ObserveOn`。
 
-It is important to know, that ReactiveCommand itself as an `IObservable` will
-never complete or OnError - errors that happen in the async method will
-instead show up on the `ThrownExceptions` property.
+重要的是，ReactiveCommand 自身作为一个 `IObservable`，将不会完成或触发错误（OnError）——异步方法中发生的错误将会通过 `ThrownExceptions` 属性出现。
 
-If it is possible that your async method can throw an exception (and most
-can!), you **must** Subscribe to `ThrownExceptions` or the exception will be
-rethrown on the UI thread.
+如果你的异步方法可能抛出异常（通常都是这样），你**必须**订阅 `ThrownExceptions` ，否则异常将会在 UI 线程上再次抛出！
 
-Here's a simple example:
+一个简单的例子：
 
 ```cs
 LoadUsersAndAvatars = ReactiveCommand.CreateAsyncTask(async _ => {
@@ -52,9 +37,9 @@ LoadUsersAndAvatars.ThrownExceptions
     .Subscribe(ex => this.Log().WarnException("Failed to load users", ex));
 ```
 
-### How can I execute the command?
+### 如何执行命令
 
-The best way to execute ReactiveCommands is via the `ExecuteAsync` method:
+执行 ReactiveCommand 最好的方式是通过 `ExecuteAsync` 方法：
 
 ```cs
 LoadUsersAndAvatars = ReactiveCommand.CreateAsyncTask(async _ => {
@@ -71,17 +56,13 @@ var results = await LoadUsersAndAvatars.ExecuteAsync();
 Console.WriteLine("You've got {0} users!", results.Count());
 ```
 
-It is important that you **must await ExecuteAsync** or else it doesn't do
-anything! `ExecuteAsync` returns a *Cold Observable*, which means that it only
-does work once someone Subscribes to it.
+你**必须 await ExecuteAsync**，这非常重要，否则什么事情也不会发生！`ExecuteAsync` 返回一个 *Cold Observable* ，意味着它只会在某人订阅它之后开始工作。
 
-For legacy code and for binding to UI frameworks, the Execute method is still
-provided.
+为了遗留代码和绑定到 UI 框架，Execute 方法依然保留。
 
-### Why CreateAsyncTask?
+### 为什么要 CreateAsyncTask
 
-Since ReactiveCommand itself is an Observable, it's quite easy to invoke async
-actions based on a ReactiveCommand. Something like:
+因为 ReactiveCommand 是一个 Observable，基于 ReactiveCommand 调用异步动作是非常容易的，例如：
 
 ```cs
 searchButton
@@ -90,26 +71,19 @@ searchButton
     .ToProperty(this, x => x.SearchResults, out searchResults);
 ```
 
-However, while this pattern is approachable if you're handy with Rx, one thing
-that ends up being Difficult™ is to disable the Command itself when the search
-is running (i.e. to prevent more than one search from running at the same
-time). CreateAsyncTask does the work to make this happen for you.
+无论如何，尽管这种模式很平易近人，他可能导致在搜索执行时禁用命令变得困难™（比如，阻止同时运行多个搜索命令）。CreateAsyncTask 帮你处理了这个问题。
 
-Another difficult aspect of this code is that it can't handle exceptions - if
-`executeSearch` ever fails once, it will never signal again because of the Rx
-Contract. ReactiveCommand handles marshaling exceptions to the
-`ThrownExceptions` property, which can be handled.
+另一个难点是不能处理异常——如果 `executeSearch` 曾经失败过一次，它将不会再次触发了——这是 Rx 约定。ReactiveCommand 将异常封送到 `ThrownExceptions` 属性，可以通过该属性处理异常。
 
-### Common Patterns
+### 常用模式
 
-This example from UserError also illustrates the canonical usage of
-CreateAsyncTask:
+这个 UserError 的例子同时演示了 CreateAsyncTask 的标准用法：
 
 ```cs
 
-// When LoadTweetsCommand is invoked, LoadTweets will be run in the
-// background, the result will be Observed on the Main thread, and
-// ToProperty will then store it in an Output Property
+// 在 LoadTweetsCommand 被调用时，
+// 将会在后台运行 LoadTweets，其结果可以在主线程上观察，
+// ToProperty 将会将结果保存在一个输出属性上 
 LoadTweetsCommand = ReactiveCommand.CreateAsyncTask(() => LoadTweets())
 
 LoadTweetsCommand.ToProperty(this, x => x.TheTweets, ref theTweets);
