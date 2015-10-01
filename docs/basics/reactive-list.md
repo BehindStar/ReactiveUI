@@ -1,42 +1,27 @@
 # ReactiveList
 
-One of the built-in classes that ships with ReactiveUI is an improved version
-of .NET's `ObservableCollection` (which is ironically, *not* an Observable).
-`ReactiveList` should be used in any place that you would normally use a List
-or ObservableCollection, as it has additional useful Rx features.
+一个与 ReactiveUI 同时到来的内置类型是一个改进版本的 .NET `ObservableCollection`（讽刺的是，**不是**一个 Observable）。 `ReactiveList` 可以在任何使用 List
+或 ObservableCollection 的地方使用。
 
-### Subscribing to Changes
+### 订阅改变
 
-`ReactiveList` provides several useful Observables that can be subscribed to
-in order to inform you about changes in the list, as well as providing you
-with notifications that happen before a list is about to change:
+`ReactiveList` 提供了一些有用的 Observable ，可以被订阅以获取列表改变通知。同时也能在列表改变前通知你：
 
-* **(Before)ItemsAdded** - signals when items are added
-* **(Before)ItemsRemoved** - signals when items are removed
-* **(Before)ItemsMoved** - signals when items are moved
-* **CountChang(ing/ed)** - signals when the number of items in the list
-  changes for any reason
-* **Changed** - passes along the `NotifyCollectionChangedEventArgs` from all
-  changes (i.e. is an Observable version of `NotifyCollectionChanged`).
-* **ShouldReset** - signals that the observer should reread the entire
-  collection, as it has changed significantly
+* **(Before)ItemsAdded** - 在项目增加时发出信号
+* **(Before)ItemsRemoved** - 在项目移除时发出信号
+* **(Before)ItemsMoved** - 在项目移动时发出信号
+* **CountChang(ing/ed)** - 在项目数量（任何原因）改变时发出信号
+* **Changed** - 通过 `NotifyCollectionChangedEventArgs` 传递所有更改（`NotifyCollectionChanged` 的 Observable 版本）.
+* **ShouldReset** - 在发生显著改变时，发出信号通知观察者应该重新读取整个集合
 
-### Semantics of Reset
+### Reset 的含义
 
-One thing that is particularly important to understand is the meaning of the
-ShouldReset Observable. The meaning of this event is, "This collection has
-changed drastically, you should reread the contents". Many people conflate
-*Reset* and *Clear*, thinking that this means the collection is now empty.
+理解 ShouldReset Observable 的含义十分重要。该事件的意思是，集合已经彻底改变了，你应该重新读取内容。许多人将 *Reset* 和 *Clear* 混为一谈，认为其意思是集合已经清空了。
 
-This is important, because if you only Subscribe to `ItemsAdded` and
-`ItemsRemoved`, you will not be correctly tracking every item in the list.
-ReactiveList will detect this scenario and attempt to warn you about it. For
-example, here is an example of maintaining a "running count" of the number of
-items in the list:
+这非常重要，因为如果只订阅 `ItemsAdded` 和 `ItemsRemoved`，将不能正确跟踪集合中的每个项目。ReactiveList 能够跟踪这种情况，并且尝试通知你。比如，有一个关于维护集合中的 “运行数量” 的例子：
 
 ```cs
-// Note that this code is hacky and for illustrative purposes, CountChanged
-// would suffice for this
+// 该例子仅供演示，CountChanged 和这个一样。
 TweetList = new ReactiveList<Tweet>();
 
 var count = 0;
@@ -49,16 +34,11 @@ addedOrRemoved.Subscribe(x => count += x);
 TweetList.ShouldReset.Subscribe(_ => count = TweetList.Count);
 ```
 
-Should you want to execute code on every object in a collection as they are
-added or removed, the `ActOnEveryObject` method documented in this guide will
-handle many edge cases around this task automatically.
+如果你想在集合的每个对象添加或删除时执行一些代码，该文档中的 `ActOnEveryObject` 方法会自动处理。
 
-### Using Change Tracking
+### 使用更改跟踪
 
-Not only can ReactiveList watch changes to the list, it can optionally tell
-you about changes to any item *in* the list. One practical example of this
-use-case is, we'd like to be notified when any document in the document list
-becomes dirty. Here's one way to do that:
+ReactiveList 不仅仅能监测列表更改，也能选择性的告诉你列表**里面**任何项的更改。有一个关于获得文档列表中的某个文档被修改的通知的例子：
 
 ```cs
 DocumentList = new ReactiveList<Document>() {
@@ -73,31 +53,18 @@ DocumentList.ItemChanged
     });
 ```
 
-Note that we had to set `ChangeTrackingEnabled` here to `true`, since change
-tracking is disabled by default for performance reasons. Note that one thing
-we *didn't* have to do in this code is, attempt to watch for changing elements
-in the collection - ReactiveList does that all for us.
+注意必须将  `ChangeTrackingEnabled` 设置为 `true`，由于性能原因，更改跟踪默认情况下是关闭的。有一点是**没必要**做的。
 
-ReactiveList only tracks changes to its immediate objects, it won't track an
-entire object hierarchy (i.e. `listOfItems[0].Foo.Bar = true` won't trigger a
-change notification, but `listOfItems[0].Foo = Bar` will).
+ReactiveList 只跟踪列表中的直接对象，它不会跟踪整个对象层次（`listOfItems[0].Foo.Bar = true` 不会触发更改通知，但是 `listOfItems[0].Foo = Bar` 会）。
 
-### Suppressing Notifications
+### 抑制通知
 
-Since ReactiveLists are often bound to UI elements like ListBoxes, making many
-small changes to a list all at once can have a significant impact in
-performance - changes to the list result in UI elements being created or
-destroyed as well as relayout and rerendering, which are quite expensive
-operations.
+由于 ReactiveList 通常绑定到 UI 元素上，例如 ListBox。一次更新许多小的更改能够显著提高性能。对列表的修改最终反映到 UI 元素的创建、销毁以及重新布局和重新渲染上，这些操作的代价都十分昂贵。
 
-Instead, when you want to make several changes to a list at the same time, use
-`SuppressChangeNotifications` - this will disable change notifications for the
-duration of the operation, then send a **Reset** notification which will
-trigger the UI to reload itself.
+因此，当你想一次应用列表的多个更改时，使用 `SuppressChangeNotifications`——在操作期间禁用更改通知，然后发送一个 **Reset** 通知触发 UI 重载。 
 
 ```cs
-// Without this using statement, the ListBox associated with this List would
-// refresh **four** separate times!
+// 没有这个 using 声明，与这个列表相关的 ListBox 将会刷新 **4** 次！
 using (TweetsList.SuppressChangeNotifications()) {
     TweetsList.Clear();
 
@@ -108,18 +75,11 @@ using (TweetsList.SuppressChangeNotifications()) {
 }
 ```
 
-Range methods such as `AddRange`, `InsertRange`, etc automatically will
-suppress change notifications if the percentage of the list being changed is
-above a certain level (i.e. if you're changing 90% of the list, it makes sense
-to signal a Reset, but if you're changing 5% of the list, it's better to
-signal Adds/Deletes)
+Range 方法类似 `AddRange`， `InsertRange`，等等，自动抑制更改通知，如果列表的更改百分比在设定值以上（比如，如果改变了列表的90%，触发一个 Reset 更有意义，但是如果改变了5%，那么最好触发 Adds/Deletes）。
 
 ### CreateCollection
 
-One method that is often useful for testing, is to create a list whose
-contents automatically get populated by an Observable. While in this case,
-it's probably easier to test the object state directly, you can also check
-correctness via counting changes:
+在测试中这个方法十分有用，用于通过一个 Observable 创建一个自动生成内容的列表。在这个例子中，测试对象状态变得更为容易，也可以通过数量变化检查正确性：
 
 ```cs
 [Fact]
