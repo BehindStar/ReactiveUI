@@ -1,29 +1,15 @@
 # ReactiveCommand
 
-One of the core goals of every MVVM library is to provide an implementation of
-`ICommand`. This interface represents one of the two major parts of what
-constitutes a ViewModel - Properties and Commands. In keeping with the goal of
-MVVM + Rx, ReactiveUI provides its own implementation of `ICommand` called
-`ReactiveCommand`, that works a bit differently than most other
-implementations.
+每个 MVVM 框架的核心目标是提供一个 `ICommand` 的实现。该接口代表了构成一个视图模型的两个主要部分——属性和命令——之一。为了保证实现 MVVM + Rx，ReactiveUI 提供了自己的 `ICommand` 实现，叫做 `ReactiveCommand`，它与大部分的其他实现有一些不同。
 
-Commands represent discrete actions that are taken in the UI - "Copy", "Open",
-and "Ok" are good examples of Commands. Usually these Commands are bound to a
-control that is built to handle Commands, like a Button. Cocoa represents this
-concept via the [Target Action
-Framework](https://developer.apple.com/library/ios/documentation/general/conceptual/CocoaEncyclopedia/Target-Action/Target-Action.html).
+命令表示在用户界面中所采取的离散动作——复制、打开、或者确定都是命令的例子。通常这些命令绑定到执行命令的控件，比如按钮。Cocoa 通过 [Target Action
+Framework](https://developer.apple.com/library/ios/documentation/general/conceptual/CocoaEncyclopedia/Target-Action/Target-Action.html)描述了这一概念。
 
-Many Commands are invoked directly by the user, but some operations are also
-useful to model via Commands despite being primarily invoked progmatically.
-For example, many code paths involving periodically loading or refreshing
-resources (i.e. "LoadTweets") can be modeled well using Commands.
+许多命令都由用户直接调用，但一些操作也可以通过命令建模，尽管主要是通过编程调用。比如，许多与周期性的加载或刷新资源相关的代码，都可以很好的使用命令建模。
 
-### Basics
+### 基础
 
-Since the act of invoking a Command represents an Event, ReactiveCommand
-itself is an `IObservable<object>`. The object that is passed along via the
-IObservable is the command parameter given to the `Execute` method of
-`ICommand`:
+由于实际上调用命令就代表一个事件，ReactiveCommand 自身是一个 `IObservable<object>`。object 通过 IObservable 传递，是 `ICommand` 的 `Execute` 方法的命令参数：
 
 ```cs
 var command = ReactiveCommand.Create();
@@ -34,24 +20,20 @@ command.Execute(4);
 >>> The number is 4
 ```
 
-While ReactiveCommand supports the Command parameter, it is recommended to not
-use it, and simply always pass `null` to the Execute method. Instead of using
-the parameter, you should be using properties that are on the ViewModel.
+虽然 ReactiveCommand 支持命令参数，但是不建议使用，通常总是传递 `null` 给 Execute 方法。相比于使用参数，应该使用视图模型上的属性。
 
-Since ReactiveCommand is an Observable, all of the Rx operators can be used
-with it. Here are some practical examples:
+由于 ReactiveCommand 是一个 Observable，所有的 Rx 操作符都以使用。这是一些特定的例子：
 
 ```cs
 
-// Note: This is for illustration purposes, see the Asynchronous
-// ReactiveCommand chapter for a better way to do this
+// 注意：这是用于演示目的，异步 ReactiveCommand 章节有更好的方式
 LoadTweets
     .Where(_ => IsLoggedIn == true)
     .SelectMany(async x => await FetchTweets())
     .ObserveOn(RxApp.MainThreadScheduler)
     .Subscribe(x => LoadedTweets = x);
 
-// Refresh when either the Command is invoked *or* the window is activated
+// 在命令被调用 *或* 窗体激活时刷新
 shouldRefreshTweets = Observable.Merge(
     this.Events().ActivatedObs.Select(_ => Unit.Default),
     this.WhenAnyObservable(x => x.ViewModel.Refresh).Select(_ => Unit.Default));
@@ -61,23 +43,14 @@ shouldRefreshTweets
     .Subscribe(_ => ViewModel.RefreshData());
 ```
 
-### CanExecute via Observable
+### 通过 Observable 定义 CanExecute
 
-All of the Commands we've created so far, can always be executed - their
-`CanExecute` simply returns 'true'. To specify when a Command can be executed,
-instead of using a `Func<object, bool>`, we'll use an `IObservable<bool>`.
-Because we're describing not only whether a Command can be executed, but when
-that value changes, we'll also get the implementation of `CanExecuteChanged`
-for free.
+到目前为止，我们创建的所有命令，总是可以执行——它们的 `CanExecute` 返回 'true'。要指定一个命令是否可以执行，相较于使用 `Func<object, bool>`，我们使用 `IObservable<bool>`。因为要描述的不仅仅是命令是否可以执行，还有值什么时候发生变化，将免费得到 `CanExecuteChanged` 的实现。
 
-Note that the parameter to `CanExecute` is ignored in ReactiveCommand. This is
-because it is fundamentally incompatible with the notion of
-`CanExecuteChanged` - if `CanExecute(bar)` is `true` and `CanExecute(baz)` is
-`false`, when should we fire `CanExecuteChanged`?
+注意在 ReactiveCommand 中传递给 `CanExecute` 的参数时无效的。这是因为其与 `CanExecuteChanged` 的概念根本不兼容 `CanExecute(bar)` 为 `true` 且 `CanExecute(baz)` 为
+`false`，什么时候触发 `CanExecuteChanged`呢？
 
-The simplest thing we can possibly do to pass along CanExecute information, is
-to use a `Subject<bool>`, which is an Observable that you control yourself by
-hand. Here's how it works:
+可以使用一个 `Subject<bool>` 对象给 CanExecute 传递信息，其实一个 Observable 对象，你可以手动控制。工作方式如下：
 
 ```cs
 var commandCanExecute = new Subject<bool>();
@@ -92,63 +65,43 @@ command.CanExecute(null);
 >>> true
 ```
 
-### Combining WhenAny and CanExecute
+### 组合 WhenAny 和 CanExecute
 
-While a Subject might be the easiest thing to understand, it certainly isn't
-the most effective. Oftentimes, a far more appropriate `CanExecute` is one
-that is based on other properties on the ViewModel. Since we want to be
-notified when a Property changes, we use the `WhenAny` method, and we `Select`
-it into a boolean value. For example:
+通常情况下，一个更为合适的 `CanExecute` 依赖于视图模型上的其他属性。由于我们想在属性变化时得到通知，我们使用 `WhenAny` 方法，并 `Select` 其为一个布尔值。例如：
 
 ```cs
-// Whether we can post a Tweet, is based on whether the user has typed any
-// text and whether it is short enough.
+// 是否可以发布 Tweet，依赖于用户是否输入且输入足够的短
 PostTweet = ReactiveCommand.Create(
     this.WhenAnyValue(x => x.TweetContents)
         .Select(x => !String.IsNullOrWhitespace(x) && x.Length < 140));
 
-// You can often leave off the extra Select by using the selector built into
-// WhenAny
+// 也可以使用内置于 WhenAny 的选择器，不使用额外的 Select
 OkButton = ReactiveCommand.Create(
     this.WhenAny(x => x.Red, x => x.Green, x => x.Blue,
         (r,g,b) => r.Value != null && g.Value != null && b.Value != null));
 ```
 
-Nearly all of your Commands will use this pattern to define when they can be
-executed. Since your Commands will be tied to Properties, many validation-type
-tasks can be accomplished in this way.
+差不多所有命令都可以使用这种模式来决定什么时候可以执行。由于命令与属性关联在一起，许多验证类型的任务可以通过这种方式完成。
 
-### Listening to Commands from the View via WhenAnyObservable
+### 通过 WhenAnyObservable 在视图中监听命令
 
-Unlike traditional `ICommand` implementations, ReactiveCommands can have as
-many people listening to the `Executed` signal as you want. This is **very**
-useful for decoupling, as the View can now listen to the ViewModels and
-execute View specific code, such as setting control focus or scroll positions.
+不像传统的 `ICommand` 实现，ReactiveCommand 的 `Executed` 信号可以被多个对象监听。这对于解耦来说**非常**有用，因为视图现在可以监听视图模型，并执行视图相关的代码，比如设置控件焦点或滚动位置。
 
-One may be tempted to simply write 
-`ViewModel.SomeCommand.Subscribe(x => ...)`, but this code fails whenever the
-ViewModel changes - you will be subscribed to the wrong command and it will
-appear to never fire. A method called `WhenAnyObservable` solves this for you:
+你可能会简单的这样实现：`ViewModel.SomeCommand.Subscribe(x => ...)`，但是这个代码在视图模型改变时失效了——你将会订阅到错误的命令，可能永远不会触发。`WhenAnyObservable` 方法可以解决这个问题：
 
 ```cs
-// Instead of doing this wrong code:
+// 错误代码
 this.ViewModel.ClearMessageText
     .Subscribe(x => MessageTextBox.GetFocus());
 
-// Do this instead, which will handle null and changing ViewModels
+// 这样做，自动处理视图模型为空和变化
 this.WhenAnyObservable(x => x.ViewModel.ClearMessageText)
     .Subscribe(x => MessageTextBox.GetFocus());
 ```
 
-### Combining Commands Together
+### 组合命令
 
-One thing that is sometimes useful, is to create a Command which simply
-invokes several other commands. ReactiveCommand helps you with this, via the
-`CreateCombined` method. The advantage to using this method, is that the
-`CanExecute` of the new Command will reflect the `and` of the child commands
-(i.e. if any of the child commands can't be invoked, the parent can't be
- either). This is especially useful when one of the commands has an
-asynchronous action attached to it.
+创建一个简单调用几个其他命令的命令有时候非常有用。ReactiveCommand 的 `CreateCombined` 方法可以实现。使用该方法的好处是，新命令的 `CanExecute` 反映了子命令的*与*结果（例如，如果任何子命令不能被调用，那么父命令也不能调用）。这对于某个命令有异步操作时非常有用。
 
 ```cs
 RefreshUsers.Subscribe(_ => this.Log().Info("Refreshing Users!"));
@@ -163,23 +116,19 @@ RefreshAll.Execute(null);
 >>> Refreshing Lists!
 ```
 
-### Invoking and Creating Commands via Observables
+### 通过 Observables 调用和创建命令
 
-There are a few convenience methods built into the framework for invoking
-commands. Any Observable can be used as a signal to invoke a command via
-`InvokeCommand`:
+有一些框架内置的简便方法用于调用命令。任何 Observable 都可以作为通过 `InvokeCommand` 调用命令的信号：
 
 ```cs
-// Invoke the Close command whenever the user hits escape. This will
-// automatically do the CanExecute check for us before calling Execute.
+// 在用户按下 ESC 时调用退出命令
+// 在执行前自动进行 CanExecute 检查
 this.Events().KeyUpObs
     .Where(x => x.EventArgs.Key == Key.Escape)
     .InvokeCommand(this, x => x.ViewModel.Close);
 ```
 
-Another convenience method called `ToCommand` allows you to create commands
-directly from `IObservable<bool>`. The above `CanExecute` examples could be
-more tersely written:
+另一个方法 `ToCommand` 允许你从 `IObservable<bool>` 对象直接创建命令。上面的 `CanExecute` 例子可以简写为：
 
 ```cs
 PostTweet = this.WhenAny(x => x.TweetContents, 
