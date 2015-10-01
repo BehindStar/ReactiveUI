@@ -61,15 +61,14 @@ public string Foo {
 }
 ```
 
-Should you have problems with ToProperty "missing" events, the easiest way to
-resolve it is via Concat'ting a canned value. For example:
+你可能觉得 ToProperty “丢失” 事件是个问题，最简单的解决方式是使用 `Concat` 进行处理。例如：
 
 ```cs
-// Has problems, because CanExecuteObservable is Hot
+// 存在问题，因为 CanExecuteObservable 是 Hot（不管有没有订阅者，都发送数据）
 someCommand.CanExecuteObservable
     .ToProperty(this, x => x.CanExecute, out canExecute);
 
-// Hack around via making the Observable cold
+// 让 Observable 变得 cold （当有一个订阅者时，才送数据）
 Observable.Defer(() => Observable.Return(someCommand.CanExecute(null)))
     .Concat(someCommand.CanExecuteObservable)
     .ToProperty(this, x => x.CanExecute, out canExecute);
