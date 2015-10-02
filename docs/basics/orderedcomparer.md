@@ -1,13 +1,10 @@
 # OrderedComparer
 
-OrderedComparer is a composer that allows you to create a comparer using the
-familiar LINQ ordering syntax. It's handy for creating a comparer for use in
-derived collections.
+OrderedComparer 是一个比较器，允许以类似 LINQ 的排序语法创建一个比较器。这对于创建一个在派生集合中使用的比较器来说比较方便。
 
-## Let's sort some employees
+## 对员工进行排序
 
-Say that we have a ```ReactiveList<Employee>``` where ```Employee``` is
-defined as follows.
+假如有一个 ```ReactiveList<Employee>``` 其 ```Employee``` 是这样定义的：
 
 ```cs
 public class Employee
@@ -18,9 +15,7 @@ public class Employee
 }
 ```
 
-Seeing as it's such an easy model, let's try to write a comparison method that
-sorts all employees by their department, then by their Name and finally by
-their salary (descending).
+这是一个很简单的模型，来写一个比较方法来对所有员工按部门进行排序，然后是名称，最后是薪水（降序）：
 
 ```cs
 public int SortEmployee(Employee x, Employee y) 
@@ -36,11 +31,7 @@ public int SortEmployee(Employee x, Employee y)
 }
 ```
 
-Not too bad but what happens if we have an employee without a
-department? ```NullReferenceException``` is what happens. And there's more edge
-cases like this and you can imagine this method being way more complex and
-error-prone with a more complex model. Let's try write the equivalent using an
-```OrderedComparer``` instead.
+看起来还可以但是如果有个员工没有部门？出现了 ```NullReferenceException```。还有许多这样的边际例子，你可以想象得到这个方法是多复杂，且在处理更复杂的模型时更容易出错。现在用 ```OrderedComparer``` 写一个等效替代：
 
 ```cs
 readonly static IComparer<Employee> employeeComparer = OrderedComparer<Employee>
@@ -54,11 +45,9 @@ public int SortEmployee(Employee x, Employee y)
 }
 ```
 
-## Use in CreateDerivedCollection
+## 在 CreateDerivedCollection 中使用
 
-Unfortunately, CreateDerivedCollection doesn't accept an IComparer<Employee>,
-it instead takes a ```Comparison<Employee>``` delegate. Luckily that's exactly
-what ```IComparer<Employee>.Compare``` is.
+不幸的是，CreateDerivedCollection 不接受一个 IComparer<Employee> 作为参数，它需要一个 ```Comparison<Employee>``` 委托。幸运的是 ``IComparer<Employee>.Compare`` 就是。
 
 ```cs
 var employees = new ReactiveList<Employee> { ... }
@@ -67,34 +56,26 @@ var orderedEmployees = employees.CreateDerivedCollect(
    orderer: OrderedComparer<Employee>
 	   .OrderBy(x => x.Department)
 	   .ThenBy(x => x.Name)
-	   .ThenByDescending(x => x.Salary).Compare; // .Compare on the last
+	   .ThenByDescending(x => x.Salary).Compare; // .Compare 在最后
 );
 ```
 
-Testing this is now a matter of putting some employees into the list and
-verifying that orderedEmployees matches the order you want it to. If you use
-the example above of creating a dedicated Sort method you can even just pass
-that straight in.
+现在要测试的是，放一些员工到这个列表中，并验证 orderedEmployees 是否和你希望的顺序匹配。如果使用使用上面的例子创建一个专用排序方法的话，你甚至可以直接传入方法：
 
 ```cs
 var employees = new ReactiveList<Employee> { ... }
 var orderedEmployees = employees.CreateDerivedCollect(x => x, orderer:  SortEmployee);
 ```
 
-### Combining with custom comparers
+### 组合自定义比较器
 
-By default ```OrderBy```, ```OrderByDescending```, ```ThenBy``` and
-```ThenByDescending``` uses ```Comparer<T>.Default``` for actually comparing
-values, exactly like LINQ to objects does. For strings that means that it uses
-```StringComparer.CurrentCulture```.
+默认情况下 ```OrderBy```， ```OrderByDescending```， ```ThenBy``` 和 ```ThenByDescending``` 使用 ```Comparer<T>.Default``` 作为实际比较器，就和 LINQ to object 一样。对于字符串，使用的是 ```StringComparer.CurrentCulture```。
 
-You can swap that out in each step though. Say that you want to sort by name
-regardless of culture and casing for example.
+你可以一步一步的换掉那些。比如说如果你想按名称以不分区域性（Culture）和大小写的方式排序：
 
 ```cs
        orderer: OrderedComparer<Employee>
            .OrderBy(x => x.Name, StringComparer.OrdinalIgnoreCase)
 ```
 
-Note: If you sort custom classes which implement ```ICompare``` or
-```ICompare<T>``` the default comparer will use that. 
+注意: 如果对实现了  ```ICompare``` 或 ```ICompare<T>``` 的类进行排序，将会使用类自身的比较器。
