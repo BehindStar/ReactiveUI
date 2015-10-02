@@ -1,22 +1,12 @@
-# CreateDerivedCollection and derived lists
+# CreateDerivedCollection 和派生列表
 
-`ReactiveList.CreateDerivedCollection` is an extremely powerful method in MVVM
-programming, which allows you to create a projection of a ReactiveList as
-another list. `CreateDerivedCollection` allows you to do projection, ordering,
-and filtering of a source ReactiveList.
+`ReactiveList.CreateDerivedCollection` 是 MVVM 编程中一个非常有用的方法，允许你创建一个 ReactiveList 的投影作为其他列表。`CreateDerivedCollection` 允许对源 ReactiveList 投影、排序和过滤。
 
-Once a derived list has been created, this list will update dynamically based
-on the source collection - as the source list has items added and removed, the
-derived list will also update its contents. If `ChangeTrackingEnabled` is
-enabled on the source list, changes to the source list will also cause updates
-to the derived list.
+一旦派生列表创建完成，该列表就会基于源集合动态更新——在源集合添加、删除项目时，该列表也会自动更新内容。如果源集合启用了 `ChangeTrackingEnabled` ，源集合的更改也会更新到派生集合。
 
-For example, if you have a source list of MenuItems and you have a `filter`
-method of `x => x.IsEnabled`, changing `IsEnabled` on any of the menu items
-will hide or show the items in the list.  Note that the derived list is
-read-only - you cannot manually modify the derived list.
+比如说，如果有一个菜单项的源集合，并且你有一个 `过滤` 方法 `x => x.IsEnabled`，改变任何菜单项的 `IsEnabled` 都会隐藏或显示列表的项目。注意派生列表是只读的——不能人工修改派生列表。
 
-### A canonical example - creating ViewModels from Models
+### 经典例子：从模型创建视图模型
 
 ```cs
 public class TweetsListViewModel : ReactiveObject
@@ -29,17 +19,16 @@ public class TweetsListViewModel : ReactiveObject
         TweetTiles = Tweets.CreateDerivedCollection(
             x => new TweetTileViewModel() { Model = x });
 
-        // Adding a new item to Tweets, results in a new ViewModel showing
-        // up in TweetTiles
+        // 向 Tweets 添加新项目
+        // TweetTiles 中出现了新的视图模型
         Tweets.Add(new Tweet() { Title = "Hello!", });
     }
 }
 ```
 
-### A more motivating example - filtering and ordering
+### 更有用的例子：过滤和排序
 
-`CreateDerivedCollection` can do some more interesting things, but to
-illustrate it, we need a more interesting set of classes.
+`CreateDerivedCollection` 可以做一些有趣的工作，但是为了演示，需要更多的类。
 
 ```cs
 public class Tweet 
@@ -59,16 +48,11 @@ public class TweetTileViewModel : ReactiveObject
 }
 ```
 
-Now, let's connect up the filtering and ordering. It's important to note, that
-since want to refilter the list based on the IsHidden value, it must be a
-ReactiveObject and fire change notifications, or else CreateDerivedList has no
-way to know when it should refilter.
+现在，开始进行过滤和排序。需要特别注意的是，由于重新过滤列表基于 IsHidden 的值，因此视图模型必须是 ReactiveObject 且触发更改通知，否则 CreateDerivedList 没办法知道什么时候进行过滤。
 
-Because we had to put `IsHidden` on the ViewModel, we need to set up two
-levels of filtering. Models that are ReactiveObject would make this easier,
-but is often not possible.
+因为必须在视图模型上添加 `IsHidden` ，所以需要设置两层过滤。如果模型是 ReactiveObject 的话就更简单了，但通常这是不可能的。
 
-Let's take a look:
+仔细看一看：
 
 ```cs
 public class TweetsListViewModel : ReactiveObject
@@ -81,18 +65,17 @@ public class TweetsListViewModel : ReactiveObject
     public TweetsListViewModel()
     {
         TweetTiles = Tweets.CreateDerivedCollection(
-            x => new TweetTileViewModel() { Model = x },
-            x => true,
-            (x, y) => x.CreatedAt.CompareTo(y.CreatedAt));
+            x => new TweetTileViewModel() { Model = x },	//选择
+            x => true,										//过滤
+            (x, y) => x.CreatedAt.CompareTo(y.CreatedAt));	//排序
 
         VisibleTiles = TweetTiles.CreateDerivedCollection(
-            x => x,
-            x => !x.IsHidden);
+            x => x,											
+            x => !x.IsHidden);	
     }
 }
 ```
 
-### Wrap it all up
+### 总结
 
-CreateDerivedCollection allows us to declare how a list should be transformed
-and keep up with the original list.
+CreateDerivedCollection 允许定义如何变换一个列表，以及如何根据源列表变化。
