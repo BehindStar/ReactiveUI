@@ -1,35 +1,27 @@
-# View Location + IViewFor
+# 视图定位和 IViewFor
 
-View Location is a feature of ReactiveUI that allows you to associate Views with
-ViewModels and set them up Automagically.
+视图定位是 ReactiveUI 的一个功能，允许你关联视图和视图模型，并自动的设置它们。
 
 ### ViewModelViewHost
 
-The easiest way to use View Location is via the `ViewModelViewHost` control,
-which is a View (on Cocoa, a UIView/NSView, and on XAML-based platforms a
-Control) which has a single `ViewModel` property. When the ViewModel property is
-set, View Location looks up the associated View and loads it into the container.
-`ViewModelViewHost` is great for lists - so much so, that if you Bind to
-`ItemsSource` on XAML-based platforms and don't set a DataTemplate, one gets
-configured that just uses `ViewModelViewHost`.
+使用视图定位最容易的方式是通过 `ViewModelViewHost` 控件，它是一个视图（在 Cocoa 是一个 UIView/NSView，在基于 XAML 的平台中，是一个控件），有一个 `ViewModel` 属性。当
+`ViewModel` 被设置时，视图定位查找相关视图并将其加载到容器。`ViewModelViewHost` 是一个强大的列表，以至于你如果你绑定到基于 XAML 的平台的 `ItemsSource` 的话，不需要设置一个数据模板（DataTemplate），只需要使用 `ViewModelViewHost` 就能完成配置。
 
 ```xml
 <ListBox x:Name="ToasterList" />
 ```
 
 ```cs
-// Now ListBox automatically gets a DataTemplate
+// 现在 ListBox 自动获得 DataTemplate
 this.OneWayBind(ViewModel, vm => vm.ToasterList, v => v.ToasterList.ItemsSource);
 ```
 
-### Registering new Views
+### 注册新视图
 
-To use View Location, you must first register types, via Splat's Service Location feature.
+要使用视图定位，必须首先注册类型，通过 Splat 的服务定位功能。
 
 ```cs
-Locator.CurrentMutable.Register(() => new ToasterView(), typeof(IViewFor<ToasterViewModel>));
+Locator.CurrentMutable.Register(() => new ToasterView(), typeof(IViewFor<ToasterViewModel>)); 
 ```
 
-View Location internally uses a class called `ViewLocator` which can either be
-replaced, or the default one used. The `ResolveView` method will return the View
-associated with a given ViewModel object.
+视图定位在内部使用了一个叫做 `ViewLocator` 的类，该类可以被替换，或者作为默认类。`ResolveView` 方法将返回与指定视图模型关联的视图。
