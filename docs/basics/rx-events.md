@@ -1,15 +1,10 @@
 # ReactiveUI.Events
 
-While ReactiveUI is primarily concerned with creating ViewModels, a separate
-library exists to help you write code that is intended to live in the View,
-called "ReactiveUI.Events" (NuGet package name, `ReactiveUI-Events`).
+尽管 ReactiveUI 主要集中于创建视图模型，也有一个独立的库帮助你编写视图中的代码。该库叫做 `ReactiveUI.Events`（NuGet 包名为 `ReactiveUI-Events`）
 
-This library is a code generated library that adds Observables for all events
-in the UI framework, via a new extension methods `Events()`. Most usages of
-`Observable.FromEventPattern` can be replaced in the Views. Events are
-straightforward mappings of the event parameters.
+这个库由代码生成，为 UI 框架的所有事件添加了 Observable，通过一个新的扩展方法 `Events()`。可以在视图模型中替换大部分使用 `Observable.FromEventPattern` 的代码。`Events` 直接映射事件参数。
 
-### Examples
+### 示例
 
 ```cs
 var router = RxApp.GetService<IScreen>().Router;
