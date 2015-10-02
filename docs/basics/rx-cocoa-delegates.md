@@ -1,12 +1,8 @@
 # Rx Cocoa Delegates
+ 
+作为事件库的一部分，基于 Cocoa 平台的 ReactiveUI.Events 创建了所有 AppKit/UIKit 中的委托类的子类，并为那些不返回值的委托事件方法创建了 Observable。这些类都在和它们的父类相同的命名空间下，但是有一个 `Rx` 后缀，同时所有的 Observable 都以 `Obs` 结束。
 
-As part of the Events library, ReactiveUI.Events on Cocoa-based platforms
-creates a subclass of all Delegate classes in AppKit/UIKit, and creates
-Observables for all delegate event methods that don't return a value. These
-classes are all under the same namespace as their parent, but are suffixed
-with "Rx", and all Observables end with "Obs".
-
-For example:
+比如：
 
 ```cs
 
@@ -16,19 +12,17 @@ tvd.ScrolledObs
 tableView.Delegate = tvd;
 ```
 
-### Caveats
+### 注意事项
 
-Note that events that return a value can't be turned into Observables - many
-of these events begin with "Should". For example:
+注意那些返回值的事件不能转换为 Observable —— 这些事件以 `Should` 开头。比如：
 
 ```cs
 
 var tvd = new UITableViewDelegateRx();
 
-// Compiler error, doesn't exist
+// 编译错误，不存在
 tvd.ShouldScrollToTopObs
     .Subscribe(_ => Console.WriteLine("How do we return true?!?"))
 ```
 
-Since this class is still a normal class, you can subclass it yourself and
-implement the ShouldXXXX methods. 
+因为这个类是一个普通类，所以你可以自己派生它，并实现 `ShouldXXXX` 方法。
