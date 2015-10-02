@@ -50,9 +50,6 @@ RxApp.MainThreadScheduler.Schedule(() => DoAThing());
 在单元测试中，默认情况下，`MainThreadScheduler` 直接运行代码，而不是在 UI 线程（不存在）上。默认情况下，不会修改 `TaskpoolScheduler`。
 
 在候选调度器上运行的最佳方式是使用 `With` 方法，常常和 TestScheduler 一起使用。它使用指定调度器将**两个调度器**都替换了：
-The best way to run under an alternate scheduler is via the `With` method,
-most often used with TestScheduler. This replaces **both schedulers** with the
-specified scheduler:
 
 ```cs
 (new TestScheduler()).With(sched =>{
