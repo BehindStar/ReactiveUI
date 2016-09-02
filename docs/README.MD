@@ -141,3 +141,5 @@
 # [调度器](basics/schedulers.md)
 
 # [测试](basics/testing.md)
+
+# 迁移到 ReactiveUI 7.0
