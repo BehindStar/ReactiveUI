@@ -142,4 +142,4 @@
 
 # [测试](basics/testing.md)
 
-# 迁移到 ReactiveUI 7.0
+# [迁移到 ReactiveUI 7.0](migrating-from-rxui6.md)
