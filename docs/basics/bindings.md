@@ -1,6 +1,6 @@
 # 基础属性绑定
 
-对于能够使用 MVVM 模式，一个核心的部分是视图模型和视图之间非常特殊的关系，即，视图通过 *绑定* ，以一种单向依赖手段连接到视图模型。
+对于使用 MVVM 模式，一个核心的部分是视图模型和视图之间非常特殊的关系，即，视图通过 *绑定* ，以一种单向依赖手段连接到视图模型。
 
 ReactiveUI 提供了这个概念的实现，相较于平台特定的实现（比如基于 XMAL 的绑定），有许多优点。
 
@@ -12,9 +12,9 @@ ReactiveUI 提供了这个概念的实现，相较于平台特定的实现（比
 
 为了在视图中使用绑定，你必须首先在视图中实现 `IViewFor<TViewModel>`。根据平台的不同，实现将会不同：
 
-* **iOS** - 将你的基类改为 Reactive UIKit 类型（如 ReactiveUIViewController）中的一个，并且实现使用 RaiseAndSetIfChanged 实现 `视图模型`，*或者* 在视图上实现 `INotifyPropertyChanged`，并确保视图模型信号改变。
+* **iOS** - 将你的基类改为 Reactive UIKit 类型（如 ReactiveUIViewController）中的一个，并且使用 RaiseAndSetIfChanged 实现 `视图模型`，*或者* 在视图上实现 `INotifyPropertyChanged`，并确保视图模型为改变送出信号。
 
-* **Android:** - 将基类改为 Reactive Activity / Fragment 类中的一个（比如 ReactiveActivity<T>），*或者*在视图上实现 `INotifyPropertyChanged`，并确保视图模型信号改变。
+* **Android:** - 将基类改为 Reactive Activity / Fragment 类中的一个（比如 ReactiveActivity<T>），*或者*在视图上实现 `INotifyPropertyChanged`，并确保视图模型为改变送出信号。
 
 * **基于 Xaml 的** - 手动实现 `IViewFor<T>` ，并确保 ViewModel 是一个依赖属性。
 
@@ -22,20 +22,20 @@ ReactiveUI 提供了这个概念的实现，相较于平台特定的实现（比
 
 一旦实现了 `IViewFor<T>`，就可以在类中使用扩展的绑定方法。就像 ReactiveUI 中的其他东西一样，在视图创建时，应该仅在构造函数或设置方法中设置绑定。
 
-* **OneWayBind:** - 设置从视图模型上的一个属性到视图的一个单向绑定。
+* **OneWayBind:** - 将视图模型上的一个属性单向绑定到视图的一个属性。
 
 ```cs
 var disp = this.OneWayBind(ViewModel, x => x.Name, x => x.Name.Text);
 disp.Dispose();   // 尽快断开绑定
 ```
 
-* **Bind:** - 设置一个双向绑定，视图模型上的属性与视图之间。
+* **Bind:** - 在视图模型上的属性与视图之间设置一个双向绑定。
 
 ```cs
 this.Bind(ViewModel, x => x.Name, x => x.Name.Text);
 ```
 
-* **BindCommand:** - 绑定 `ICommand` 到控件，或者到该控件的指定事件。（实现方式取决于 UI 框架）：
+* **BindCommand:** - 将 `ICommand` 绑定到控件，或者到该控件的指定事件。（实现方式取决于 UI 框架）：
 
 ```cs
 // 绑定 OK 命令到按钮
