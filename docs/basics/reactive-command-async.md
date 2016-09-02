@@ -10,7 +10,7 @@ ReactiveCommand 的一个最重要的功能是其内置的异步操作设施。�
 * **CreateAsyncObservable** - 创建一个命令，它的异步方法返回 `IObservable<T>`
 * **CreateAsyncTask** - 创建一个命令，它的异步方法返回 `Task` 或 `Task<T>`；在想使用 `async/await` 编写方法时使用这个方法。
 
-所有的这些方法将方法的结果作为产生的 ReactiveCommand 的参数化类型（比如，如果你的异步方法返回 `Task<String>`，那么命令将会是 `ReactiveCommand<String>`）。这意味着，订阅该命令自身返回异步方法的结果作为一个 Observable。
+这些方法将方法的结果作为创建的 ReactiveCommand 的参数化类型（比如，如果你的异步方法返回 `Task<String>`，那么命令将会是 `ReactiveCommand<String>`）。这意味着，订阅该命令自身返回异步方法的结果作为一个 Observable。
 
 ReactiveCommand 自己保证他的结果**总是**在 UI 线程上传输，因此不需要额外的 `ObserveOn`。
 
@@ -91,8 +91,7 @@ LoadTweetsCommand.ToProperty(this, x => x.TheTweets, ref theTweets);
 var errorMessage = "The Tweets could not be loaded";
 var errorResolution = "Check your Internet connection";
 
-// Any exceptions thrown by LoadTweets will end up being
-// sent through ThrownExceptions
+// LoadTweets 抛出的所有异常都将通过 ThrownExceptions 输出
 LoadTweetsCommand.ThrownExceptions
     .Select(ex => new UserError(errorMessage, errorResolution))
     .Subscribe(x => UserError.Throw(x));
