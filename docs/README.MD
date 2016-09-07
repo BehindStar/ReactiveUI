@@ -1,7 +1,7 @@
 #  中文文档
 
 # [简介](overview.md)
-
+* [例子](basics/example.md)
 # [ReactiveObject](basics/reactive-object.md)
 
 * [视图模型之道](basics/reactive-object.md#视图模型之道)
